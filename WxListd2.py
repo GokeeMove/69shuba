@@ -136,7 +136,7 @@ async def get_html(num,url,title):
                         tree = etree.HTML(html)
                         pptitle = tree.xpath('//title')[0].text
                         # 检查返回内容是否包含 "Just a moment"
-                        if "Just a moment" in pptitle:
+                        if "Just" in str(pptitle):
                             print(f"检测到 'Just a moment' 内容，第{retry_count + 1}次重试...")
                             retry_count += 1
                             if retry_count < max_retries:
