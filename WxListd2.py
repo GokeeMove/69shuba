@@ -164,6 +164,10 @@ async def get_html(num,url,title):
                 else:
                     print(f"重试{max_retries}次后仍然失败，跳过此章节: {title}")
                     return
+        
+        # 如果循环结束但没有成功返回，说明重试次数已用完
+        print(f"重试{max_retries}次后仍然失败，跳过此章节: {title}")
+        return
                 
 def download_path(path_url):
     print("path---->https://www.69shuba.com"+path_url)
