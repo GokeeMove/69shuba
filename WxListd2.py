@@ -130,6 +130,18 @@ async def get_html(num,url,title):
                         
                         html = await resp.text(encoding='gbk') # 直接获取到bytes
                         print("html->"+str(html))
+                        
+                        # 检查返回内容是否包含 "Just a moment"
+                        if "Just a moment" in html:
+                            print(f"检测到 'Just a moment' 内容，第{retry_count + 1}次重试...")
+                            retry_count += 1
+                            if retry_count < max_retries:
+                                await asyncio.sleep(2)  # 等待2秒后重试
+                                continue
+                            else:
+                                print(f"重试{max_retries}次后仍然收到 'Just a moment'，跳过此章节: {title}")
+                                return
+                        
                         start = time.time()
                         tree = etree.HTML(html)
                         pptitle = tree.xpath('//title')[0].text
