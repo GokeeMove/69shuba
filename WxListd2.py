@@ -38,8 +38,8 @@ headers = {
   'sec-fetch-site': 'none',
   'sec-fetch-user': '?1',
   'upgrade-insecure-requests': '1',  
-  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
-  'Cookie': 'zh_choose=s; cf_clearance=prd5HPFf3QPClIiSKYnfh0Oyusq6KQQzSpxUYogd3IA-1761047032-1.2.1.1-dT2vR2vRS3KJmex0vESSsxVgo4E88cJzfmMXITeskVZY8iDHPHoILdv2ruTAZufbbXsdVhj2AWTEpU3fe2UBMKVwdK39rI.dVDcKJeugUB__Pf5pw0TJD7qUMRZgvWhxNzfOrjWUulAqs5uSbxl6NJxAVo7Tfj9cW35LNo2rjKcmgl_OVtYPIOZB.10jAmL.Mbbx1AFntxQoocSpw1RHrTQZb5A4kpzT9sAiUNVBL38; shuba_userverfiy=1761047032@35ffb5e91af7702379bba3560f8f5e18; jieqiVisitTime=jieqiArticlesearchTime%3D1761047033; shuba=11415-10492-23399-5789; _ga=GA1.1.2032785226.1761047035; _ga_04LTEL5PWY=GS2.1.s1761047035$o1$g1$t1761047039$j56$l0$h0',
+  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+  'Cookie': 'zh_choose=s; _cc_id=9a7e0db84a00369c5036eaafa7c03e45; _ga=GA1.1.1773426538.1759029680; _ym_uid=1759029785753091381; _ym_uid_cst=znv0HA%3D%3D; _lr_env_src_ats=false; panoramaId_expiry=1761214704637; panoramaId=ce857c91c29020f7ba8de95ea6b7185ca02c7f328dda55d2708f6422afb053e1; panoramaIdType=panoDevice; cto_bundle=UTStsV9JRkpFNjczNGFzclJjS2h5b3BEUGJPV05WSmJPVU9NREtxbEpxekU0S2s4Ynh1VzMzNFVvT2VyNnlXeUZydHQ2Z3dTRnVSOG0lMkJGVXBiZXhjZnQzQlVydmVyWWRseWFpZzBXVzFjVEE3RmlON3dNeGJ4RlBtRmZDVXNFZUJaQnFZbkxyNyUyRlV3NiUyQnVvMUpHZFpYdEs3TUElM0QlM0Q; connectId={"ttl":86400000,"lastUsed":1761044376399,"lastSynced":1761044376399}; cf_clearance=QU3.ytsrXqM3pFJbJT5HQmxz_UAgbzP8BYkJ9q4_6vs-1761047708-1.2.1.1-brBAvF_sNLExRo6YC3C7Rzeg0h642WSEsn.f_Bbh8f48XLEC06MWm0xAg38mU6jVBSOYCzWbNzzUBQTJj1u8tUItoGp3B9On4apdoGiFWDlXKJ5z9l6rUnzq3yOOJLPJPLiqxnnTso9Br7MpGfXCKnClWqktC2ebFMpGuBg0apmzsQN9GV1bgerWtPJJRREAjEjTNiYDAGdlU2_dncisGiyp.ohPemw0REubLEDrFMg; shuba_userverfiy=1761047709@07c2c26f9bd0095f96db435b82d96cda; jieqiVisitTime=jieqiArticlesearchTime%3D1761047709; shuba=13456-9498-22337-4727; _ga_04LTEL5PWY=GS2.1.s1761047693$o6$g1$t1761047724$j29$l0$h0',
   'If-Modified-Since': 'None',
   'If-None-Match': 'None'
 }
@@ -163,6 +163,6 @@ def download_path(path_url):
     print('写入耗时：%.5f秒' % float(time.time()-start))
     
 start_time = time.time()
-download_path("/book/90072/")
+download_path("/book/30978/")
 print('耗时：%.5f秒' % float(time.time()-start_time))
 # getText("https://www.biquge.com.cn", "/book/90072/")
