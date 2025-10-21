@@ -38,8 +38,8 @@ headers = {
   'sec-fetch-site': 'none',
   'sec-fetch-user': '?1',
   'upgrade-insecure-requests': '1',  
-  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
-  'Cookie': 'zh_choose=s; _cc_id=9a7e0db84a00369c5036eaafa7c03e45; _ga=GA1.1.1773426538.1759029680; _ym_uid=1759029785753091381; _ym_uid_cst=znv0HA%3D%3D; _lr_env_src_ats=false; panoramaId_expiry=1761214704637; panoramaId=ce857c91c29020f7ba8de95ea6b7185ca02c7f328dda55d2708f6422afb053e1; panoramaIdType=panoDevice; cto_bundle=UTStsV9JRkpFNjczNGFzclJjS2h5b3BEUGJPV05WSmJPVU9NREtxbEpxekU0S2s4Ynh1VzMzNFVvT2VyNnlXeUZydHQ2Z3dTRnVSOG0lMkJGVXBiZXhjZnQzQlVydmVyWWRseWFpZzBXVzFjVEE3RmlON3dNeGJ4RlBtRmZDVXNFZUJaQnFZbkxyNyUyRlV3NiUyQnVvMUpHZFpYdEs3TUElM0QlM0Q; connectId={"ttl":86400000,"lastUsed":1761044376399,"lastSynced":1761044376399}; cf_clearance=oKO_udxzznZ3O.ECsop.A3IpphgHLslyoMU_DHbTn0Q-1761044414-1.2.1.1-bcig.G_AofUaSaIiYAPR.m1.eW9PWTAXzDcgMI2cTW5psMXhlVJ8fWg6R0sG8120VOZQarKXb_x5GGw4cygN7NqrJvpsv.vSPsDsChtfZQpMk54JjS97NK6RlEjdWyH2x1baVkZAJ_NDodezjp0G5d.Knna6lr7ITHxM_N2_K5HH7sHz.Y1KK1upKn7kA0ajKAKoowwT28s4Gr4vjzNUVSybIr3jl0x7GG7swxBfs9c; shuba_userverfiy=1761044415@09bec50f75860a6d608508d072ef00ad; jieqiVisitTime=jieqiArticlesearchTime%3D1761044415; shuba=1585-5630-18798-1188; _ga_04LTEL5PWY=GS2.1.s1761044422$o5$g0$t1761044422$j60$l0$h0',
+  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+  'Cookie': 'zh_choose=s; cf_clearance=prd5HPFf3QPClIiSKYnfh0Oyusq6KQQzSpxUYogd3IA-1761047032-1.2.1.1-dT2vR2vRS3KJmex0vESSsxVgo4E88cJzfmMXITeskVZY8iDHPHoILdv2ruTAZufbbXsdVhj2AWTEpU3fe2UBMKVwdK39rI.dVDcKJeugUB__Pf5pw0TJD7qUMRZgvWhxNzfOrjWUulAqs5uSbxl6NJxAVo7Tfj9cW35LNo2rjKcmgl_OVtYPIOZB.10jAmL.Mbbx1AFntxQoocSpw1RHrTQZb5A4kpzT9sAiUNVBL38; shuba_userverfiy=1761047032@35ffb5e91af7702379bba3560f8f5e18; jieqiVisitTime=jieqiArticlesearchTime%3D1761047033; shuba=11415-10492-23399-5789; _ga=GA1.1.2032785226.1761047035; _ga_04LTEL5PWY=GS2.1.s1761047035$o1$g1$t1761047039$j56$l0$h0',
   'If-Modified-Since': 'None',
   'If-None-Match': 'None'
 }
@@ -108,22 +108,49 @@ def main_get_html():
 async def get_html(num,url,title):
     async with sem:#等待其中20个协程结束才进行下一步
         # async with是异步上下文管理器
-        async with aiohttp.ClientSession() as session:  # 获取session
-            async with session.request('GET', url, headers=headers2, data=payload) as resp:  # 提出请求
-                start = time.time()
-                html = await resp.text(encoding='gbk') # 直接获取到bytes
-                print("html->"+str(html))
-                start = time.time()
-                tree = etree.HTML(html)
-                pptitle = tree.xpath('//title')[0].text
-                content = tree.xpath('/html/body/div[2]/div[1]/div[3]/text()')
-                txt = ''
-                for i in range(len(content)):
-                    txt = txt+content[i].strip()+'\n'   # strip()去掉首位空格字符，‘\n’换行
-                    #txt = txt.replace('笔趣阁TV手机端https://m.biqugetv.com/','')
-                htmls[num]="\n\n\n" + pptitle + "\n"+ str(txt)
-                # print('解析耗时：%.5f秒' % float(time.time()-start))
-                print("complete->"+str(pptitle))
+        max_retries = 3  # 最大重试次数
+        retry_count = 0
+        
+        while retry_count < max_retries:
+            try:
+                async with aiohttp.ClientSession() as session:  # 获取session
+                    async with session.request('GET', url, headers=headers, data=payload) as resp:  # 提出请求
+                        start = time.time()
+                        
+                        # 检查响应状态码
+                        if resp.status == 304:
+                            print(f"收到304状态码，第{retry_count + 1}次重试...")
+                            retry_count += 1
+                            if retry_count < max_retries:
+                                await asyncio.sleep(1)  # 等待1秒后重试
+                                continue
+                            else:
+                                print(f"重试{max_retries}次后仍然收到304，跳过此章节: {title}")
+                                return
+                        
+                        html = await resp.text(encoding='gbk') # 直接获取到bytes
+                        print("html->"+str(html))
+                        start = time.time()
+                        tree = etree.HTML(html)
+                        pptitle = tree.xpath('//title')[0].text
+                        content = tree.xpath('/html/body/div[2]/div[1]/div[3]/text()')
+                        txt = ''
+                        for i in range(len(content)):
+                            txt = txt+content[i].strip()+'\n'   # strip()去掉首位空格字符，'\n'换行
+                            #txt = txt.replace('笔趣阁TV手机端https://m.biqugetv.com/','')
+                        htmls[num]="\n\n\n" + pptitle + "\n"+ str(txt)
+                        # print('解析耗时：%.5f秒' % float(time.time()-start))
+                        print("complete->"+str(pptitle))
+                        return  # 成功获取内容，退出重试循环
+                        
+            except Exception as e:
+                print(f"请求出错: {e}, 第{retry_count + 1}次重试...")
+                retry_count += 1
+                if retry_count < max_retries:
+                    await asyncio.sleep(2)  # 等待2秒后重试
+                else:
+                    print(f"重试{max_retries}次后仍然失败，跳过此章节: {title}")
+                    return
                 
 def download_path(path_url):
     print("path---->https://www.69shuba.com"+path_url)
@@ -136,6 +163,6 @@ def download_path(path_url):
     print('写入耗时：%.5f秒' % float(time.time()-start))
     
 start_time = time.time()
-download_path("/book/30978/")
+download_path("/book/90072/")
 print('耗时：%.5f秒' % float(time.time()-start_time))
 # getText("https://www.biquge.com.cn", "/book/90072/")
