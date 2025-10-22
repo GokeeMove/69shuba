@@ -73,7 +73,7 @@ def getText(base_url, til_url):
         retry_count = 0
         success = False
         
-        while retry_count < max_retries and not success:
+        while not success:
             try:
                 resp = requests.request("GET", url=di.attrib.get('href'), headers=headers, data=payload)
                 tree = etree.HTML(resp.text)
@@ -81,14 +81,10 @@ def getText(base_url, til_url):
                 
                 # 检查返回内容是否包含 "Just a moment"
                 if "Just" in str(pptitle):
-                    print(f"检测到 'Just a moment' 内容，第{retry_count + 1}次重试...")
                     retry_count += 1
-                    if retry_count < max_retries:
-                        time.sleep(2)  # 等待2秒后重试
-                        continue
-                    else:
-                        print(f"重试{max_retries}次后仍然收到 'Just a moment'，跳过此章节")
-                        break
+                    print(f"检测到 'Just a moment' 内容，第{retry_count}次重试...")
+                    time.sleep(2)  # 等待2秒后重试
+                    continue
                 
                 # 成功获取内容
                 content = tree.xpath('/html/body/div[2]/div[1]/div[3]/text()')
@@ -104,13 +100,9 @@ def getText(base_url, til_url):
                 success = True
                 
             except Exception as e:
-                print(f"请求出错: {e}, 第{retry_count + 1}次重试...")
                 retry_count += 1
-                if retry_count < max_retries:
-                    time.sleep(2)  # 等待2秒后重试
-                else:
-                    print(f"重试{max_retries}次后仍然失败，跳过此章节")
-                    break
+                print(f"请求出错: {e}, 第{retry_count}次重试...")
+                time.sleep(2)  # 等待2秒后重试
         
         i=i-1
 
