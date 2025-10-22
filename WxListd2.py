@@ -67,19 +67,51 @@ def getText(base_url, til_url):
     i=len(dd)
     for di in dd:
         urls.append(di.attrib.get('href'))
-        resp = requests.request("GET", url=di.attrib.get('href'), headers=headers, data=payload)
-        tree = etree.HTML(resp.text)
-        pptitle = tree.xpath('//title')[0].text
-        content = tree.xpath('/html/body/div[2]/div[1]/div[3]/text()')
-        txt = ''
-        for j in range(len(content)):
-            txt = txt+content[j].strip()+'\n'   # strip()去掉首位空格字符，‘\n’换行
-            #txt = txt.replace('笔趣阁TV手机端https://m.biqugetv.com/','')
-        htmls[i]="\n\n\n" + pptitle + "\n"+ str(txt)
-        # print('解析耗时：%.5f秒' % float(time.time()-start))
-        print("complete->"+str(pptitle))
-        titles.append(di.text)
-        nums.append(i)
+        
+        # 添加重试逻辑处理 "Just a moment..." 的情况
+        max_retries = 3  # 最大重试次数
+        retry_count = 0
+        success = False
+        
+        while retry_count < max_retries and not success:
+            try:
+                resp = requests.request("GET", url=di.attrib.get('href'), headers=headers, data=payload)
+                tree = etree.HTML(resp.text)
+                pptitle = tree.xpath('//title')[0].text
+                
+                # 检查返回内容是否包含 "Just a moment"
+                if "Just" in str(pptitle):
+                    print(f"检测到 'Just a moment' 内容，第{retry_count + 1}次重试...")
+                    retry_count += 1
+                    if retry_count < max_retries:
+                        time.sleep(2)  # 等待2秒后重试
+                        continue
+                    else:
+                        print(f"重试{max_retries}次后仍然收到 'Just a moment'，跳过此章节")
+                        break
+                
+                # 成功获取内容
+                content = tree.xpath('/html/body/div[2]/div[1]/div[3]/text()')
+                txt = ''
+                for j in range(len(content)):
+                    txt = txt+content[j].strip()+'\n'   # strip()去掉首位空格字符，'\n'换行
+                    #txt = txt.replace('笔趣阁TV手机端https://m.biqugetv.com/','')
+                htmls[i]="\n\n\n" + pptitle + "\n"+ str(txt)
+                # print('解析耗时：%.5f秒' % float(time.time()-start))
+                print("complete->"+str(pptitle))
+                titles.append(di.text)
+                nums.append(i)
+                success = True
+                
+            except Exception as e:
+                print(f"请求出错: {e}, 第{retry_count + 1}次重试...")
+                retry_count += 1
+                if retry_count < max_retries:
+                    time.sleep(2)  # 等待2秒后重试
+                else:
+                    print(f"重试{max_retries}次后仍然失败，跳过此章节")
+                    break
+        
         i=i-1
 
 
@@ -91,89 +123,11 @@ def getContent():
     for content in htmls2:
         tfile.write(str(content[1]))
     tfile.close()
-
-    '''
-协程调用方，作用：请求网页
-'''
-def main_get_html():
-    loop = asyncio.get_event_loop()           # 获取事件循环
-    tasks = [get_html(num,url,title) for num,url,title in zip(nums,urls,titles)]  # 把所有任务放到一个列表中
-    loop.run_until_complete(asyncio.wait(tasks)) # 激活协程
-    loop.close()  # 关闭事件循环
-
-    #——————————————————————————————————————————————————#
-'''                                                                                                 
-提交请求获取网页html                                                                            
-'''
-async def get_html(num,url,title):
-    async with sem:#等待其中20个协程结束才进行下一步
-        # async with是异步上下文管理器
-        max_retries = 3  # 最大重试次数
-        retry_count = 0
-        
-        while retry_count < max_retries:
-            try:
-                async with aiohttp.ClientSession() as session:  # 获取session
-                    async with session.request('GET', url, headers=headers, data=payload) as resp:  # 提出请求
-                        start = time.time()
-                        
-                        # 检查响应状态码
-                        if resp.status == 304:
-                            print(f"收到304状态码，第{retry_count + 1}次重试...")
-                            retry_count += 1
-                            if retry_count < max_retries:
-                                await asyncio.sleep(1)  # 等待1秒后重试
-                                continue
-                            else:
-                                print(f"重试{max_retries}次后仍然收到304，跳过此章节: {title}")
-                                return
-                        
-                        html = await resp.text(encoding='gbk') # 直接获取到bytes
-                        print("html->"+str(html))
-                        
-
-                        start = time.time()
-                        tree = etree.HTML(html)
-                        pptitle = tree.xpath('//title')[0].text
-                        # 检查返回内容是否包含 "Just a moment"
-                        if "Just" in str(pptitle):
-                            print(f"检测到 'Just a moment' 内容，第{retry_count + 1}次重试...")
-                            retry_count += 1
-                            if retry_count < max_retries:
-                                await asyncio.sleep(2)  # 等待2秒后重试
-                                continue
-                            else:
-                                print(f"重试{max_retries}次后仍然收到 'Just a moment'，跳过此章节: {title}")
-                                return
-                        
-                        content = tree.xpath('/html/body/div[2]/div[1]/div[3]/text()')
-                        txt = ''
-                        for i in range(len(content)):
-                            txt = txt+content[i].strip()+'\n'   # strip()去掉首位空格字符，'\n'换行
-                            #txt = txt.replace('笔趣阁TV手机端https://m.biqugetv.com/','')
-                        htmls[num]="\n\n\n" + pptitle + "\n"+ str(txt)
-                        # print('解析耗时：%.5f秒' % float(time.time()-start))
-                        print("complete->"+str(pptitle))
-                        return  # 成功获取内容，退出重试循环
-                        
-            except Exception as e:
-                print(f"请求出错: {e}, 第{retry_count + 1}次重试...")
-                retry_count += 1
-                if retry_count < max_retries:
-                    await asyncio.sleep(2)  # 等待2秒后重试
-                else:
-                    print(f"重试{max_retries}次后仍然失败，跳过此章节: {title}")
-                    return
-        
-        # 如果循环结束但没有成功返回，说明重试次数已用完
-        print(f"重试{max_retries}次后仍然失败，跳过此章节: {title}")
-        return
                 
 def download_path(path_url):
     print("path---->https://www.69shuba.com"+path_url)
     getText("https://www.69shuba.com", path_url)
     start = time.time()
-    # main_get_html()
     print('获取及解析耗时：%.5f秒' % float(time.time()-start))
     start = time.time()
     getContent()
