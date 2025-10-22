@@ -69,7 +69,7 @@ def getText(base_url, til_url):
         urls.append(di.attrib.get('href'))
         
         # 添加重试逻辑处理 "Just a moment..." 的情况
-        max_retries = 3  # 最大重试次数
+        max_retries = 5  # 最大重试次数
         retry_count = 0
         success = False
         
